@@ -44,20 +44,59 @@ impl Vertex {
 
 const VERTICES: &[Vertex] = &[
     Vertex {
-        position: [0.0, 1.0, 0.0],
+        position: [-1.0, -1.0, 1.0],
         color: [1.0, 0.0, 0.0],
     },
     Vertex {
-        position: [-1.0, -1.0, 0.0],
+        position: [1.0, -1.0, 1.0],
         color: [0.0, 1.0, 0.0],
     },
     Vertex {
-        position: [1.0, -1.0, 0.0],
+        position: [1.0, 1.0, 1.0],
+        color: [0.0, 0.0, 1.0],
+    },
+    Vertex {
+        position: [-1.0, 1.0, 1.0],
+        color: [0.0, 0.0, 1.0],
+    },
+    Vertex {
+        position: [-1.0, -1.0, -1.0],
+        color: [1.0, 0.0, 0.0],
+    },
+    Vertex {
+        position: [1.0, -1.0, -1.0],
+        color: [0.0, 1.0, 0.0],
+    },
+    Vertex {
+        position: [1.0, 1.0, -1.0],
+        color: [0.0, 0.0, 1.0],
+    },
+    Vertex {
+        position: [-1.0, 1.0, -1.0],
         color: [0.0, 0.0, 1.0],
     },
 ];
 
-const INDICES: &[u16] = &[0, 1, 2];
+const INDICES: &[u16] = &[
+    // front
+    0, 1, 2,
+    2, 3, 0,
+    // right
+    1, 5, 6,
+    6, 2, 1,
+    // back
+    7, 6, 5,
+    5, 4, 7,
+    // left
+    4, 0, 3,
+    3, 7, 4,
+    // bottom
+    4, 5, 1,
+    1, 0, 4,
+    // top
+    3, 2, 6,
+    6, 7, 3
+];
 
 // const VERTICES: &[Vertex] = &[
 //     Vertex {
