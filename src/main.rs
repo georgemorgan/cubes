@@ -79,23 +79,12 @@ const VERTICES: &[Vertex] = &[
 
 const INDICES: &[u16] = &[
     // front
-    0, 1, 2,
-    2, 3, 0,
-    // right
-    1, 5, 6,
-    6, 2, 1,
-    // back
-    7, 6, 5,
-    5, 4, 7,
-    // left
-    4, 0, 3,
-    3, 7, 4,
-    // bottom
-    4, 5, 1,
-    1, 0, 4,
-    // top
-    3, 2, 6,
-    6, 7, 3
+    0, 1, 2, 2, 3, 0, // right
+    1, 5, 6, 6, 2, 1, // back
+    7, 6, 5, 5, 4, 7, // left
+    4, 0, 3, 3, 7, 4, // bottom
+    4, 5, 1, 1, 0, 4, // top
+    3, 2, 6, 6, 7, 3,
 ];
 
 // const VERTICES: &[Vertex] = &[
@@ -386,36 +375,41 @@ impl State {
             height: size.height,
             present_mode: wgpu::PresentMode::Fifo,
         };
+        
         let swap_chain = device.create_swap_chain(&surface, &sc_desc);
 
-        let vs_src = include_str!("vertex.glsl");
-        let fs_src = include_str!("fragment.glsl");
         let mut compiler = shaderc::Compiler::new().unwrap();
+
         let vs_spirv = compiler
             .compile_into_spirv(
-                vs_src,
+                include_str!("vertex.glsl"),
                 shaderc::ShaderKind::Vertex,
                 "vertex.glsl",
                 "main",
                 None,
             )
             .unwrap();
+
+        let vs_data = wgpu::util::make_spirv(vs_spirv.as_binary_u8());
+
+        let vs_module = device.create_shader_module(&wgpu::ShaderModuleDescriptor {
+            label: Some("Vertex Shader"),
+            source: vs_data,
+            flags: wgpu::ShaderFlags::default(),
+        });
+
         let fs_spirv = compiler
             .compile_into_spirv(
-                fs_src,
+                include_str!("fragment.glsl"),
                 shaderc::ShaderKind::Fragment,
                 "fragment.glsl",
                 "main",
                 None,
             )
             .unwrap();
-        let vs_data = wgpu::util::make_spirv(vs_spirv.as_binary_u8());
+
         let fs_data = wgpu::util::make_spirv(fs_spirv.as_binary_u8());
-        let vs_module = device.create_shader_module(&wgpu::ShaderModuleDescriptor {
-            label: Some("Vertex Shader"),
-            source: vs_data,
-            flags: wgpu::ShaderFlags::default(),
-        });
+
         let fs_module = device.create_shader_module(&wgpu::ShaderModuleDescriptor {
             label: Some("Fragment Shader"),
             source: fs_data,
@@ -423,8 +417,13 @@ impl State {
         });
 
         let camera = Camera::new((0.0, 0.0, 3.0), cgmath::Deg(-90.0), cgmath::Deg(0.0));
-        let projection =
-            Projection::new(sc_desc.width, sc_desc.height, cgmath::Deg(45.0), 0.1, 1000.0);
+        let projection = Projection::new(
+            sc_desc.width,
+            sc_desc.height,
+            cgmath::Deg(45.0),
+            0.1,
+            1000.0,
+        );
         let camera_controller = CameraController::new(4.0, 0.4);
 
         let mut uniforms = Uniforms::new();
@@ -476,11 +475,9 @@ impl State {
                 buffers: &[Vertex::desc()],
             },
             fragment: Some(wgpu::FragmentState {
-                // 3.
                 module: &fs_module,
                 entry_point: "main",
                 targets: &[wgpu::ColorTargetState {
-                    // 4.
                     format: sc_desc.format,
                     alpha_blend: wgpu::BlendState::REPLACE,
                     color_blend: wgpu::BlendState::REPLACE,
@@ -632,8 +629,13 @@ fn main() {
 
     event_loop.run(move |event, _, control_flow| {
         *control_flow = ControlFlow::Poll;
+
         match event {
-            Event::MainEventsCleared => window.request_redraw(),
+
+            Event::MainEventsCleared => {
+                window.request_redraw()
+            },
+
             Event::DeviceEvent {
                 ref event,
                 .. // We're not using device_id currently
@@ -641,7 +643,7 @@ fn main() {
                 println!("Key");
                 state.input(event);
             }
-            // UPDATED!
+
             Event::WindowEvent {
                 ref event,
                 window_id,
@@ -665,7 +667,7 @@ fn main() {
                     _ => {}
                 }
             }
-            // UPDATED!
+
             Event::RedrawRequested(_) => {
                 let now = std::time::Instant::now();
                 let dt = now - last_render_time;
@@ -681,6 +683,7 @@ fn main() {
                     Err(e) => eprintln!("{:?}", e),
                 }
             }
+
             _ => {}
         }
     });
